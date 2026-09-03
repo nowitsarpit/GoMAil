@@ -8,8 +8,8 @@ import { logout } from '@/lib/api';
 import toast from 'react-hot-toast';
 import {
   Mail, LayoutDashboard, Send, Users, Settings,
-  Activity, BarChart3, Server, Key, Webhook,
-  ChevronDown, LogOut, UserCircle, Menu, X
+  Activity, BarChart3, Server, ChevronDown, LogOut,
+  UserCircle, Menu, X, Sparkles, Shield
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -48,47 +48,59 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     exact ? pathname === href : pathname.startsWith(href);
 
   const SidebarContent = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Logo */}
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'linear-gradient(180deg, #0d0f15 0%, #08090d 100%)' }}>
+      {/* Brand Header */}
       <div style={{
-        padding: '20px 16px 16px',
-        borderBottom: '1px solid var(--color-border-subtle)',
-        display: 'flex', alignItems: 'center', gap: '10px',
+        padding: '22px 18px 18px',
+        borderBottom: '1px solid var(--color-border)',
+        display: 'flex', alignItems: 'center', gap: '12px',
       }}>
         <div style={{
-          width: '28px', height: '28px',
-          background: 'var(--color-accent)',
-          borderRadius: '6px',
+          width: '32px', height: '32px',
+          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+          borderRadius: '8px',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 0 16px -2px rgba(99, 102, 241, 0.5)',
           flexShrink: 0,
         }}>
-          <Mail size={14} color="white" />
+          <Mail size={16} color="white" />
         </div>
         <div>
-          <div style={{ fontWeight: 700, fontSize: '14px', letterSpacing: '-0.01em' }}>GoMAil</div>
-          <div style={{ fontSize: '10px', color: 'var(--color-text-muted)', letterSpacing: '0.05em' }}>
-            PLAN · DELIVER · OBSERVE
+          <div style={{ fontWeight: 700, fontSize: '15px', letterSpacing: '-0.02em', color: '#ffffff' }}>GoMAil</div>
+          <div style={{ fontSize: '9px', fontWeight: 600, color: 'var(--color-accent-text)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            ORCHESTRATION
           </div>
         </div>
       </div>
 
-      {/* Org context */}
+      {/* Organization Badge */}
       {organization && (
         <div style={{
-          padding: '10px 16px',
-          borderBottom: '1px solid var(--color-border-subtle)',
-          fontSize: '12px',
+          padding: '12px 16px',
+          margin: '12px 10px 4px',
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid var(--color-border)',
+          borderRadius: '8px',
         }}>
-          <div style={{ color: 'var(--color-text-muted)', marginBottom: '2px' }}>Organization</div>
-          <div style={{ fontWeight: 500, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+            <span style={{ fontSize: '10px', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Workspace
+            </span>
+            <span style={{
+              fontSize: '10px', fontWeight: 600, padding: '1px 6px', borderRadius: '100px',
+              background: 'rgba(99, 102, 241, 0.15)', color: '#a5b4fc', border: '1px solid rgba(99, 102, 241, 0.25)',
+            }}>
+              {role}
+            </span>
+          </div>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {organization.name}
           </div>
-          <div style={{ fontSize: '10px', color: 'var(--color-accent-text)', marginTop: '2px' }}>{role}</div>
         </div>
       )}
 
-      {/* Navigation */}
-      <nav style={{ flex: 1, padding: '8px', overflowY: 'auto' }}>
+      {/* Nav List */}
+      <nav style={{ flex: 1, padding: '10px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
         {NAV_ITEMS.map((item) => {
           const active = isActive(item.href, item.exact);
           const Icon = item.icon;
@@ -101,25 +113,27 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px',
-                padding: '8px 10px',
-                borderRadius: '6px',
-                marginBottom: '1px',
-                color: active ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
-                background: active ? 'var(--color-surface-3)' : 'transparent',
-                fontWeight: active ? 500 : 400,
+                padding: '9px 12px',
+                borderRadius: '8px',
+                color: active ? '#ffffff' : 'var(--color-text-secondary)',
+                background: active
+                  ? 'linear-gradient(90deg, rgba(99, 102, 241, 0.2) 0%, rgba(99, 102, 241, 0.05) 100%)'
+                  : 'transparent',
+                fontWeight: active ? 600 : 400,
                 fontSize: '13px',
                 textDecoration: 'none',
-                transition: 'background 0.1s, color 0.1s',
+                transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
+                border: active ? '1px solid rgba(99, 102, 241, 0.35)' : '1px solid transparent',
               }}
             >
-              <Icon size={15} />
-              {item.label}
+              <Icon size={16} color={active ? '#a5b4fc' : 'currentColor'} />
+              <span style={{ flex: 1 }}>{item.label}</span>
               {active && (
                 <div style={{
-                  width: '4px', height: '4px',
+                  width: '6px', height: '6px',
                   borderRadius: '50%',
                   background: 'var(--color-accent)',
-                  marginLeft: 'auto',
+                  boxShadow: '0 0 8px var(--color-accent)',
                 }} />
               )}
             </Link>
@@ -127,8 +141,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         })}
       </nav>
 
-      {/* User menu */}
-      <div style={{ padding: '8px', borderTop: '1px solid var(--color-border-subtle)', position: 'relative' }}>
+      {/* User Footer */}
+      <div style={{ padding: '12px', borderTop: '1px solid var(--color-border)', position: 'relative' }}>
         <button
           onClick={() => setUserMenuOpen(!userMenuOpen)}
           style={{
@@ -137,22 +151,37 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             alignItems: 'center',
             gap: '10px',
             padding: '8px 10px',
-            borderRadius: '6px',
-            background: 'transparent',
+            borderRadius: '8px',
+            background: userMenuOpen ? 'var(--color-surface-2)' : 'transparent',
             border: 'none',
             cursor: 'pointer',
             color: 'var(--color-text-primary)',
+            transition: 'background 0.15s',
           }}
           aria-label="User menu"
           id="user-menu-btn"
         >
           {user?.avatarUrl ? (
-            <img src={user.avatarUrl} alt="" style={{ width: '28px', height: '28px', borderRadius: '50%' }} />
+            <img
+              src={user.avatarUrl}
+              alt=""
+              style={{
+                width: '30px', height: '30px', borderRadius: '50%',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+              }}
+            />
           ) : (
-            <UserCircle size={28} color="var(--color-text-muted)" />
+            <div style={{
+              width: '30px', height: '30px', borderRadius: '50%',
+              background: 'linear-gradient(135deg, #1e222e 0%, #2a2f40 100%)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <UserCircle size={18} color="var(--color-text-muted)" />
+            </div>
           )}
           <div style={{ flex: 1, textAlign: 'left', overflow: 'hidden' }}>
-            <div style={{ fontSize: '13px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: '13px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#f1f3f9' }}>
               {user?.name ?? user?.email ?? 'User'}
             </div>
             <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -165,34 +194,42 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         {userMenuOpen && (
           <div style={{
             position: 'absolute',
-            bottom: '56px',
-            left: '8px',
-            right: '8px',
-            background: 'var(--color-surface-2)',
-            border: '1px solid var(--color-border)',
-            borderRadius: '8px',
+            bottom: '62px',
+            left: '10px',
+            right: '10px',
+            background: '#131620',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            borderRadius: '10px',
             overflow: 'hidden',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
-            zIndex: 50,
+            boxShadow: '0 16px 36px -4px rgba(0, 0, 0, 0.7)',
+            zIndex: 100,
+            animation: 'fadeIn 0.15s ease-out',
           }}>
-            <Link href="/app/settings" onClick={() => setUserMenuOpen(false)} style={{
-              display: 'flex', alignItems: 'center', gap: '10px',
-              padding: '10px 14px', fontSize: '13px',
-              color: 'var(--color-text-secondary)', textDecoration: 'none',
-            }}>
-              <Settings size={14} /> Settings
+            <Link
+              href="/app/settings"
+              onClick={() => setUserMenuOpen(false)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '10px',
+                padding: '11px 14px', fontSize: '13px',
+                color: 'var(--color-text-secondary)', textDecoration: 'none',
+                transition: 'background 0.15s, color 0.15s',
+              }}
+            >
+              <Settings size={15} /> Settings
             </Link>
             <button
               onClick={() => { setUserMenuOpen(false); logoutMutation.mutate(); }}
               style={{
                 width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
-                padding: '10px 14px', fontSize: '13px',
+                padding: '11px 14px', fontSize: '13px',
                 color: 'var(--color-error)', background: 'none',
-                border: 'none', cursor: 'pointer', borderTop: '1px solid var(--color-border-subtle)',
+                border: 'none', cursor: 'pointer',
+                borderTop: '1px solid var(--color-border)',
+                textAlign: 'left',
               }}
               id="logout-btn"
             >
-              <LogOut size={14} /> Sign out
+              <LogOut size={15} /> Sign out
             </button>
           </div>
         )}
@@ -201,13 +238,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--color-surface-0)' }}>
       {/* Desktop sidebar */}
       <aside style={{
-        width: '220px',
+        width: '240px',
         flexShrink: 0,
-        background: 'var(--color-surface-1)',
-        borderRight: '1px solid var(--color-border-subtle)',
+        borderRight: '1px solid var(--color-border)',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -217,23 +253,21 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 200, display: 'flex',
-        }}>
-          <div style={{
-            position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)',
-          }} onClick={() => setSidebarOpen(false)} />
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex' }}>
+          <div
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
+            onClick={() => setSidebarOpen(false)}
+          />
           <aside style={{
-            position: 'relative', width: '260px',
-            background: 'var(--color-surface-1)',
-            borderRight: '1px solid var(--color-border)',
-            zIndex: 1,
+            position: 'relative', width: '270px', zIndex: 1,
+            boxShadow: '0 0 40px rgba(0,0,0,0.8)',
           }}>
             <button
               onClick={() => setSidebarOpen(false)}
               style={{
-                position: 'absolute', top: '12px', right: '12px',
-                background: 'none', border: 'none', cursor: 'pointer',
+                position: 'absolute', top: '16px', right: '14px',
+                background: 'rgba(255, 255, 255, 0.05)', border: 'none',
+                borderRadius: '6px', padding: '4px', cursor: 'pointer',
                 color: 'var(--color-text-muted)',
               }}
               aria-label="Close sidebar"
@@ -245,17 +279,27 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
 
-      {/* Main content */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {/* Mobile top bar */}
-        <div style={{
-          display: 'none', // shown on mobile via media query; handled by CSS
-          padding: '12px 16px',
-          borderBottom: '1px solid var(--color-border-subtle)',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: 'var(--color-surface-1)',
-        }} className="mobile-header">
+      {/* Main Content Area */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
+        {/* Subtle Ambient Radial Glow */}
+        <div
+          style={{
+            position: 'absolute', top: '-100px', left: '20%', right: '20%', height: '350px',
+            background: 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(99, 102, 241, 0.12), transparent 70%)',
+            pointerEvents: 'none', zIndex: 0,
+          }}
+        />
+
+        {/* Mobile Header */}
+        <div
+          style={{
+            padding: '12px 16px',
+            borderBottom: '1px solid var(--color-border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            background: 'var(--color-surface-1)', zIndex: 10,
+          }}
+          className="mobile-header"
+        >
           <button
             onClick={() => setSidebarOpen(true)}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-primary)' }}
@@ -263,11 +307,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           >
             <Menu size={20} />
           </button>
-          <span style={{ fontWeight: 700, fontSize: '15px' }}>GoMAil</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '22px', height: '22px', background: 'var(--color-accent)', borderRadius: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Mail size={12} color="white" />
+            </div>
+            <span style={{ fontWeight: 700, fontSize: '14px' }}>GoMAil</span>
+          </div>
           <div style={{ width: '20px' }} />
         </div>
 
-        <main style={{ flex: 1, overflowY: 'auto', background: 'var(--color-surface-0)' }}>
+        <main style={{ flex: 1, overflowY: 'auto', zIndex: 1 }}>
           {children}
         </main>
       </div>

@@ -6,17 +6,19 @@ import { getCampaigns, createCampaign, deleteCampaign, launchCampaign, pauseCamp
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { Plus, Search, Send, Pause, Play, X, Trash2, Eye, Loader2 } from 'lucide-react';
+import {
+  Plus, Search, Send, Pause, Play, X, Trash2, Eye,
+  Loader2, Filter, Sparkles, CheckCircle2, AlertCircle
+} from 'lucide-react';
 
-const STATUS_COLOR: Record<string, string> = {
-  DRAFT: 'var(--color-text-muted)',
-  READY: 'var(--color-info)',
-  RUNNING: 'var(--color-accent)',
-  PAUSED: 'var(--color-warning)',
-  COMPLETED: 'var(--color-success)',
-  CANCELLED: 'var(--color-text-disabled)',
-  FAILED: 'var(--color-error)',
-  SCHEDULED: 'var(--color-info)',
+const STATUS_CONFIG: Record<string, { bg: string; text: string; border: string }> = {
+  RUNNING: { bg: 'rgba(99, 102, 241, 0.15)', text: '#a5b4fc', border: 'rgba(99, 102, 241, 0.3)' },
+  COMPLETED: { bg: 'rgba(16, 185, 129, 0.15)', text: '#34d399', border: 'rgba(16, 185, 129, 0.3)' },
+  FAILED: { bg: 'rgba(244, 63, 94, 0.15)', text: '#fb7185', border: 'rgba(244, 63, 94, 0.3)' },
+  PAUSED: { bg: 'rgba(245, 158, 11, 0.15)', text: '#fbbf24', border: 'rgba(245, 158, 11, 0.3)' },
+  DRAFT: { bg: 'rgba(255, 255, 255, 0.05)', text: '#9aa4b8', border: 'rgba(255, 255, 255, 0.1)' },
+  CANCELLED: { bg: 'rgba(255, 255, 255, 0.03)', text: '#626c82', border: 'rgba(255, 255, 255, 0.06)' },
+  SCHEDULED: { bg: 'rgba(14, 165, 233, 0.15)', text: '#38bdf8', border: 'rgba(14, 165, 233, 0.3)' },
 };
 
 export default function CampaignsPage() {
@@ -67,146 +69,216 @@ export default function CampaignsPage() {
   });
 
   return (
-    <div style={{ padding: '32px' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+    <div style={{ padding: '36px', maxWidth: '1240px', margin: '0 auto' }}>
+      {/* Top Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '28px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: '4px' }}>Campaigns</h1>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-            {pagination?.total ?? 0} campaigns total
+          <h1 style={{ fontSize: '26px', fontWeight: 800, letterSpacing: '-0.03em', color: '#ffffff', marginBottom: '4px' }}>
+            Campaigns
+          </h1>
+          <p style={{ fontSize: '14px', color: 'var(--color-text-secondary)' }}>
+            {pagination?.total ?? 0} total campaigns · Full state machine with BullMQ guarantees
           </p>
         </div>
+
         <button
           onClick={() => setShowNew(true)}
           style={{
-            display: 'flex', alignItems: 'center', gap: '7px',
-            padding: '9px 16px',
-            background: 'var(--color-accent)', color: 'white',
-            border: 'none', borderRadius: '7px', fontWeight: 600, fontSize: '13px',
-            cursor: 'pointer',
+            display: 'inline-flex', alignItems: 'center', gap: '8px',
+            padding: '10px 20px', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '13px',
+            color: '#ffffff', cursor: 'pointer',
+            boxShadow: '0 4px 16px -2px rgba(99, 102, 241, 0.4)',
+            transition: 'transform 0.15s',
           }}
           id="new-campaign-btn"
         >
-          <Plus size={15} /> New Campaign
+          <Plus size={16} /> New Campaign
         </button>
       </div>
 
-      {/* Filters */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: '1 1 260px' }}>
-          <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+      {/* Filter and Search Bar */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: '1 1 280px' }}>
+          <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
           <input
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            placeholder="Search campaigns..."
+            placeholder="Search campaigns by name..."
             style={{
-              width: '100%', padding: '8px 12px 8px 32px',
+              width: '100%', padding: '9px 12px 9px 36px',
               background: 'var(--color-surface-1)', border: '1px solid var(--color-border)',
-              borderRadius: '6px', color: 'var(--color-text-primary)', fontSize: '13px',
+              borderRadius: '8px', color: 'var(--color-text-primary)', fontSize: '13px',
             }}
           />
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-          style={{
-            padding: '8px 12px', background: 'var(--color-surface-1)',
-            border: '1px solid var(--color-border)', borderRadius: '6px',
-            color: 'var(--color-text-primary)', fontSize: '13px', minWidth: '140px',
-          }}
-        >
-          <option value="">All statuses</option>
-          {['DRAFT','READY','RUNNING','PAUSED','COMPLETED','CANCELLED','FAILED'].map(s => (
-            <option key={s} value={s}>{s}</option>
+
+        {/* Status Filter Chips */}
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          {[
+            { label: 'All', val: '' },
+            { label: 'Running', val: 'RUNNING' },
+            { label: 'Draft', val: 'DRAFT' },
+            { label: 'Completed', val: 'COMPLETED' },
+            { label: 'Paused', val: 'PAUSED' },
+            { label: 'Failed', val: 'FAILED' },
+          ].map((f) => (
+            <button
+              key={f.label}
+              onClick={() => { setStatusFilter(f.val); setPage(1); }}
+              style={{
+                padding: '6px 12px', borderRadius: '100px', fontSize: '12px', fontWeight: 600,
+                border: `1px solid ${statusFilter === f.val ? 'var(--color-accent)' : 'var(--color-border)'}`,
+                background: statusFilter === f.val ? 'rgba(99, 102, 241, 0.15)' : 'var(--color-surface-1)',
+                color: statusFilter === f.val ? '#a5b4fc' : 'var(--color-text-muted)',
+                cursor: 'pointer', transition: 'all 0.15s',
+              }}
+            >
+              {f.label}
+            </button>
           ))}
-        </select>
+        </div>
       </div>
 
-      {/* Table */}
-      <div style={{ background: 'var(--color-surface-1)', border: '1px solid var(--color-border)', borderRadius: '10px', overflow: 'hidden' }}>
+      {/* Campaigns Table Card */}
+      <div style={{
+        background: 'rgba(17, 20, 28, 0.85)',
+        border: '1px solid var(--color-border)',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        boxShadow: '0 4px 24px -2px rgba(0, 0, 0, 0.4)',
+      }}>
         {isLoading ? (
-          <div style={{ padding: '60px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-            <Loader2 size={24} style={{ animation: 'spin 0.8s linear infinite', margin: '0 auto 10px', display: 'block' }} />
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+          <div style={{ padding: '60px', textAlign: 'center', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+            <Loader2 size={20} style={{ animation: 'spin 0.8s linear infinite' }} />
             Loading campaigns...
           </div>
         ) : campaigns.length === 0 ? (
-          <div style={{ padding: '60px', textAlign: 'center' }}>
-            <Send size={32} color="var(--color-text-disabled)" style={{ margin: '0 auto 12px', display: 'block' }} />
-            <p style={{ fontWeight: 500, marginBottom: '6px' }}>No campaigns found</p>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
-              {search || statusFilter ? 'Try adjusting your filters' : 'Create your first campaign'}
+          <div style={{ padding: '60px 20px', textAlign: 'center' }}>
+            <div style={{
+              width: '48px', height: '48px', borderRadius: '50%',
+              background: 'rgba(255, 255, 255, 0.04)', margin: '0 auto 16px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Send size={22} color="var(--color-text-muted)" />
+            </div>
+            <p style={{ fontSize: '16px', fontWeight: 600, marginBottom: '6px', color: '#ffffff' }}>No campaigns found</p>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginBottom: '20px' }}>
+              {search || statusFilter ? 'Try clearing your search or status filters.' : 'Create your first email campaign to begin sending.'}
             </p>
+            <button
+              onClick={() => setShowNew(true)}
+              style={{
+                padding: '9px 18px', background: 'var(--color-accent)',
+                border: 'none', borderRadius: '8px', color: 'white',
+                fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+              }}
+            >
+              <Plus size={14} style={{ display: 'inline', marginRight: '6px' }} /> Create Campaign
+            </button>
           </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
-                {['Campaign', 'Status', 'Recipients', 'Progress', 'Created', 'Actions'].map(col => (
-                  <th key={col} style={{ padding: '10px 16px', textAlign: 'left', fontSize: '11px', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                    {col}
+              <tr style={{ borderBottom: '1px solid var(--color-border)', background: 'rgba(255, 255, 255, 0.01)' }}>
+                {['Name', 'Status', 'Recipients', 'Progress', 'Delivery Mode', 'Created', 'Actions'].map((c) => (
+                  <th key={c} style={{
+                    padding: '12px 18px', textAlign: 'left', fontSize: '11px',
+                    fontWeight: 600, color: 'var(--color-text-muted)',
+                    textTransform: 'uppercase', letterSpacing: '0.05em',
+                  }}>
+                    {c}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {campaigns.map((c, i) => {
-                const pct = c.totalRecipients > 0
-                  ? Math.round((c.sentCount + c.failedCount) / c.totalRecipients * 100)
-                  : 0;
+              {campaigns.map((c: any, i: number) => {
+                const cfg = STATUS_CONFIG[c.status] ?? STATUS_CONFIG['DRAFT']!;
+                const pct = c.totalRecipients > 0 ? Math.round((c.sentCount / c.totalRecipients) * 100) : 0;
                 return (
-                  <tr key={c.id} style={{ borderBottom: i < campaigns.length - 1 ? '1px solid var(--color-border-subtle)' : 'none' }}>
-                    <td style={{ padding: '12px 16px' }}>
-                      <Link href={`/app/campaigns/${c.id}`} style={{ color: 'var(--color-text-primary)', textDecoration: 'none', fontWeight: 500, fontSize: '13px' }}>
+                  <tr
+                    key={c.id}
+                    style={{
+                      borderBottom: i < campaigns.length - 1 ? '1px solid var(--color-border)' : 'none',
+                      transition: 'background 0.15s',
+                    }}
+                  >
+                    <td style={{ padding: '14px 18px' }}>
+                      <Link
+                        href={`/app/campaigns/${c.id}`}
+                        style={{ color: '#ffffff', textDecoration: 'none', fontWeight: 600, fontSize: '14px', display: 'block' }}
+                      >
                         {c.name}
                       </Link>
-                      {c.description && <div style={{ fontSize: '12px', color: 'var(--color-text-muted)', marginTop: '2px' }}>{c.description}</div>}
+                      {c.description && (
+                        <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{c.description}</span>
+                      )}
                     </td>
-                    <td style={{ padding: '12px 16px' }}>
+                    <td style={{ padding: '14px 18px' }}>
                       <span style={{
-                        padding: '3px 8px', borderRadius: '100px', fontSize: '11px', fontWeight: 600,
-                        background: `${STATUS_COLOR[c.status]}22`, color: STATUS_COLOR[c.status],
+                        display: 'inline-flex', alignItems: 'center', gap: '6px',
+                        padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: 600,
+                        background: cfg.bg, color: cfg.text, border: `1px solid ${cfg.border}`,
                       }}>
+                        {c.status === 'RUNNING' && (
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#818cf8', animation: 'pulse 1.5s infinite' }} />
+                        )}
                         {c.status}
                       </span>
                     </td>
-                    <td style={{ padding: '12px 16px', fontSize: '13px', color: 'var(--color-text-secondary)' }}>
+                    <td style={{ padding: '14px 18px', fontSize: '13px', color: 'var(--color-text-secondary)' }}>
                       {c.totalRecipients.toLocaleString()}
                     </td>
-                    <td style={{ padding: '12px 16px', minWidth: '120px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{ flex: 1, height: '4px', background: 'var(--color-surface-3)', borderRadius: '2px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${pct}%`, background: 'var(--color-accent)', borderRadius: '2px' }} />
+                    <td style={{ padding: '14px 18px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '120px' }}>
+                        <div style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.06)', borderRadius: '100px', overflow: 'hidden' }}>
+                          <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #6366f1, #10b981)', borderRadius: '100px' }} />
                         </div>
-                        <span style={{ fontSize: '11px', color: 'var(--color-text-muted)', minWidth: '28px' }}>{pct}%</span>
+                        <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{pct}%</span>
                       </div>
                     </td>
-                    <td style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                    <td style={{ padding: '14px 18px', fontSize: '12px', color: 'var(--color-text-muted)' }}>
+                      {c.deliveryMode === 'FIXED_GAP' ? `Throttled (${c.delayMs ?? 0}ms)` : 'Immediate'}
+                    </td>
+                    <td style={{ padding: '14px 18px', fontSize: '12px', color: 'var(--color-text-muted)' }}>
                       {new Date(c.createdAt).toLocaleDateString()}
                     </td>
-                    <td style={{ padding: '12px 16px' }}>
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        <Link href={`/app/campaigns/${c.id}`} title="View" style={{ padding: '5px', color: 'var(--color-text-muted)', display: 'flex', borderRadius: '4px' }}>
-                          <Eye size={14} />
+                    <td style={{ padding: '14px 18px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Link
+                          href={`/app/campaigns/${c.id}`}
+                          style={{
+                            padding: '6px 10px', background: 'var(--color-surface-2)',
+                            border: '1px solid var(--color-border)', borderRadius: '6px',
+                            color: 'var(--color-text-primary)', fontSize: '12px', textDecoration: 'none',
+                            display: 'inline-flex', alignItems: 'center', gap: '4px',
+                          }}
+                        >
+                          <Eye size={12} /> View
                         </Link>
+                        {c.status === 'READY' && (
+                          <button
+                            onClick={() => actionMutation.mutate({ id: c.id, action: 'launch' })}
+                            style={{ padding: '6px 10px', background: 'var(--color-accent)', border: 'none', borderRadius: '6px', color: 'white', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            <Play size={12} /> Launch
+                          </button>
+                        )}
                         {c.status === 'RUNNING' && (
-                          <button onClick={() => actionMutation.mutate({ id: c.id, action: 'pause' })} title="Pause" style={{ padding: '5px', color: 'var(--color-warning)', background: 'none', border: 'none', cursor: 'pointer', borderRadius: '4px', display: 'flex' }}>
-                            <Pause size={14} />
+                          <button
+                            onClick={() => actionMutation.mutate({ id: c.id, action: 'pause' })}
+                            style={{ padding: '6px 10px', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '6px', color: '#fbbf24', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            <Pause size={12} /> Pause
                           </button>
                         )}
                         {c.status === 'PAUSED' && (
-                          <button onClick={() => actionMutation.mutate({ id: c.id, action: 'resume' })} title="Resume" style={{ padding: '5px', color: 'var(--color-accent)', background: 'none', border: 'none', cursor: 'pointer', borderRadius: '4px', display: 'flex' }}>
-                            <Play size={14} />
-                          </button>
-                        )}
-                        {['RUNNING', 'PAUSED', 'SCHEDULED', 'READY'].includes(c.status) && (
-                          <button onClick={() => { if (confirm('Cancel this campaign?')) actionMutation.mutate({ id: c.id, action: 'cancel' }); }} title="Cancel" style={{ padding: '5px', color: 'var(--color-error)', background: 'none', border: 'none', cursor: 'pointer', borderRadius: '4px', display: 'flex' }}>
-                            <X size={14} />
-                          </button>
-                        )}
-                        {['DRAFT', 'COMPLETED', 'CANCELLED', 'FAILED'].includes(c.status) && (
-                          <button onClick={() => { if (confirm('Delete this campaign?')) actionMutation.mutate({ id: c.id, action: 'delete' }); }} title="Delete" style={{ padding: '5px', color: 'var(--color-error)', background: 'none', border: 'none', cursor: 'pointer', borderRadius: '4px', display: 'flex' }}>
-                            <Trash2 size={14} />
+                          <button
+                            onClick={() => actionMutation.mutate({ id: c.id, action: 'resume' })}
+                            style={{ padding: '6px 10px', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '6px', color: '#34d399', fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                          >
+                            <Play size={12} /> Resume
                           </button>
                         )}
                       </div>
@@ -219,64 +291,66 @@ export default function CampaignsPage() {
         )}
       </div>
 
-      {/* Pagination */}
-      {pagination && pagination.totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '16px' }}>
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-            style={{ padding: '6px 12px', background: 'var(--color-surface-1)', border: '1px solid var(--color-border)', borderRadius: '6px', color: 'var(--color-text-primary)', fontSize: '13px', cursor: page === 1 ? 'not-allowed' : 'pointer', opacity: page === 1 ? 0.5 : 1 }}>
-            Previous
-          </button>
-          <span style={{ padding: '6px 12px', fontSize: '13px', color: 'var(--color-text-muted)' }}>
-            Page {page} of {pagination.totalPages}
-          </span>
-          <button onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))} disabled={page === pagination.totalPages}
-            style={{ padding: '6px 12px', background: 'var(--color-surface-1)', border: '1px solid var(--color-border)', borderRadius: '6px', color: 'var(--color-text-primary)', fontSize: '13px', cursor: page === pagination.totalPages ? 'not-allowed' : 'pointer', opacity: page === pagination.totalPages ? 0.5 : 1 }}>
-            Next
-          </button>
-        </div>
-      )}
-
       {/* New Campaign Modal */}
       {showNew && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: 'var(--color-surface-1)', border: '1px solid var(--color-border)', borderRadius: '12px', padding: '32px', width: '100%', maxWidth: '440px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '20px' }}>New Campaign</h2>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Campaign Name *
-              </label>
-              <input
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="e.g. Q3 Product Launch"
-                autoFocus
-                style={{ width: '100%', padding: '9px 12px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: '6px', color: 'var(--color-text-primary)', fontSize: '14px' }}
-              />
-            </div>
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                Description (optional)
-              </label>
-              <textarea
-                value={newDesc}
-                onChange={(e) => setNewDesc(e.target.value)}
-                rows={2}
-                placeholder="What's this campaign about?"
-                style={{ width: '100%', padding: '9px 12px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: '6px', color: 'var(--color-text-primary)', fontSize: '14px', resize: 'vertical' }}
-              />
-            </div>
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-              <button onClick={() => setShowNew(false)} style={{ padding: '9px 18px', background: 'none', border: '1px solid var(--color-border)', borderRadius: '6px', color: 'var(--color-text-secondary)', fontSize: '13px', cursor: 'pointer' }}>
-                Cancel
-              </button>
-              <button
-                onClick={() => createMutation.mutate({ name: newName.trim(), description: newDesc.trim() || undefined })}
-                disabled={!newName.trim() || createMutation.isPending}
-                style={{ padding: '9px 18px', background: 'var(--color-accent)', border: 'none', borderRadius: '6px', color: 'white', fontSize: '13px', fontWeight: 600, cursor: 'pointer', opacity: !newName.trim() || createMutation.isPending ? 0.7 : 1 }}
-              >
-                {createMutation.isPending ? 'Creating...' : 'Create Campaign'}
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', zIndex: 1000, padding: '20px',
+        }}>
+          <div style={{
+            background: 'var(--color-surface-1)', border: '1px solid var(--color-border)',
+            borderRadius: '12px', width: '100%', maxWidth: '480px',
+            boxShadow: '0 24px 48px rgba(0,0,0,0.6)', overflow: 'hidden',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 22px', borderBottom: '1px solid var(--color-border)' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff' }}>Create New Campaign</h2>
+              <button onClick={() => setShowNew(false)} style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer' }}>
+                <X size={18} />
               </button>
             </div>
+            <form onSubmit={(e) => { e.preventDefault(); if (newName.trim()) createMutation.mutate({ name: newName, description: newDesc || undefined }); }} style={{ padding: '22px' }}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>
+                  Campaign Name *
+                </label>
+                <input
+                  autoFocus
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder="e.g. Q4 Growth Outreach"
+                  style={{ width: '100%', padding: '9px 12px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: '6px', color: 'var(--color-text-primary)', fontSize: '14px' }}
+                />
+              </div>
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--color-text-muted)', marginBottom: '6px', textTransform: 'uppercase' }}>
+                  Description (Optional)
+                </label>
+                <textarea
+                  value={newDesc}
+                  onChange={(e) => setNewDesc(e.target.value)}
+                  placeholder="Target audience, strategy, notes..."
+                  rows={3}
+                  style={{ width: '100%', padding: '9px 12px', background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', borderRadius: '6px', color: 'var(--color-text-primary)', fontSize: '13px', resize: 'vertical' }}
+                />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                <button type="button" onClick={() => setShowNew(false)} style={{ padding: '8px 16px', background: 'none', border: '1px solid var(--color-border)', borderRadius: '6px', fontSize: '13px', color: 'var(--color-text-secondary)', cursor: 'pointer' }}>
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={createMutation.isPending || !newName.trim()}
+                  style={{
+                    padding: '8px 20px', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    border: 'none', borderRadius: '6px', color: 'white', fontSize: '13px', fontWeight: 600,
+                    cursor: 'pointer', opacity: createMutation.isPending || !newName.trim() ? 0.6 : 1,
+                  }}
+                >
+                  {createMutation.isPending ? 'Creating...' : 'Create & Configure'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
