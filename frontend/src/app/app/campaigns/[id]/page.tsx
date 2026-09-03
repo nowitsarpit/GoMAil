@@ -66,7 +66,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
   // SSE for live progress
   useEffect(() => {
     if (activeTab !== 'progress' || !campaign || !['RUNNING', 'PAUSED'].includes(campaign.status)) return;
-    const API = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:4000';
+    const API = process.env['NEXT_PUBLIC_API_URL'] ?? 'http://localhost:5000';
     const es = new EventSource(`${API}/api/v1/campaigns/${id}/progress`, { withCredentials: true });
     es.onmessage = (e) => { try { setProgress(JSON.parse(e.data)); } catch {} };
     sseRef.current = es;

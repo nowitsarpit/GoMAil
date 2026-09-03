@@ -98,6 +98,7 @@ export async function buildAuthorizationUrl(state: OAuthStateData): Promise<stri
 
   return client.authorizationUrl({
     scope: 'openid email profile',
+    redirect_uri: env.GOOGLE_CALLBACK_URL,
     state: state.state,
     nonce: state.nonce,
     code_challenge: codeChallenge,
@@ -123,7 +124,11 @@ export async function exchangeCodeForIdentity(
 ): Promise<GoogleIdentity> {
   const client = await getGoogleOidcClient();
 
-  const params = { code, state: stateData.state };
+  const params = {
+    code,
+    state: stateData.state,
+    iss: client.issuer.metadata.issuer,
+  };
 
   const tokenSet = await client.callback(env.GOOGLE_CALLBACK_URL, params, {
     state: stateData.state,
