@@ -75,6 +75,19 @@ router.post(
       return;
     }
 
+    // Parse optional custom mapping if provided
+    let mapping: Record<string, string> = {};
+    if (req.body['mapping']) {
+      try {
+        mapping = typeof req.body['mapping'] === 'string' ? JSON.parse(req.body['mapping']) : req.body['mapping'];
+      } catch {}
+    }
+
+    const emailCol = (mapping['email'] || 'email').toLowerCase();
+    const firstNameCol = mapping['firstName'] ? mapping['firstName'].toLowerCase() : null;
+    const lastNameCol = mapping['lastName'] ? mapping['lastName'].toLowerCase() : null;
+    const companyCol = mapping['company'] ? mapping['company'].toLowerCase() : null;
+
     // Validate, normalize, deduplicate
     const seen = new Set<string>();
     const valid: Array<{ email: string; normalized: string; firstName?: string; lastName?: string; company?: string }> = [];
@@ -82,7 +95,7 @@ router.post(
 
     for (let i = 0; i < rawRows.length; i++) {
       const row = rawRows[i]!;
-      const raw = (row['email'] ?? '').trim();
+      const raw = (row[emailCol] ?? row['email'] ?? row['e-mail'] ?? row['mail'] ?? '').trim();
 
       if (!raw) {
         invalid.push({ row: i + 1, email: raw, reason: 'Empty email' });
@@ -104,9 +117,9 @@ router.post(
       valid.push({
         email: raw.toLowerCase().trim(),
         normalized,
-        firstName: row['firstname'] ?? row['first_name'],
-        lastName: row['lastname'] ?? row['last_name'],
-        company: row['company'],
+        firstName: firstNameCol ? row[firstNameCol] : (row['firstname'] ?? row['first_name'] ?? row['first']),
+        lastName: lastNameCol ? row[lastNameCol] : (row['lastname'] ?? row['last_name'] ?? row['last']),
+        company: companyCol ? row[companyCol] : (row['company'] ?? row['organization'] ?? row['business']),
       });
     }
 
@@ -193,6 +206,63 @@ router.post(
         total,
       },
     });
+  }
+);
+
+/**
+ * GET /api/v1/campaigns/:id/recipients/export
+ * Download all campaign recipients as a CSV file.
+ */
+router.get(
+  '/:id/recipients/export',
+  requirePermission('campaign.read'),
+  async (req: Request, res: Response): Promise<void> => {
+    const campaignId = req.params['id'] as string;
+    const orgId = req.user!.organizationId;
+
+    const campaign = await prisma.campaign.findFirst({
+      where: { id: campaignId, organizationId: orgId },
+      select: { id: true, name: true },
+    });
+
+    if (!campaign) {
+      res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Campaign not found' } });
+      return;
+    }
+
+    const recipients = await prisma.campaignRecipient.findMany({
+      where: { campaignId, organizationId: orgId },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        email: true,
+        firstName: true,
+        lastName: true,
+        company: true,
+        status: true,
+        scheduledAt: true,
+        processedAt: true,
+        createdAt: true,
+      },
+    });
+
+    const csvData = recipients.map((r) => ({
+      email: r.email,
+      firstName: r.firstName || '',
+      lastName: r.lastName || '',
+      company: r.company || '',
+      status: r.status,
+      scheduledAt: r.scheduledAt ? r.scheduledAt.toISOString() : '',
+      processedAt: r.processedAt ? r.processedAt.toISOString() : '',
+      addedAt: r.createdAt.toISOString(),
+    }));
+
+    const csv = Papa.unparse(csvData);
+    const sanitizedName = campaign.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    const filename = `${sanitizedName}_recipients.csv`;
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.status(200).send(csv);
   }
 );
 

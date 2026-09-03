@@ -1,9 +1,16 @@
 import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
+import multer from 'multer';
+import Papa from 'papaparse';
 import { requireAuth } from '../middleware/auth.js';
 import { requirePermission } from '../middleware/rbac.js';
 import { prisma } from '../lib/prisma.js';
 import { isValidEmail, normalizeEmail } from '../lib/idempotency.js';
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+});
 
 const router = Router();
 router.use(requireAuth);
@@ -68,6 +75,116 @@ router.post('/', requirePermission('contacts.manage'), async (req: Request, res:
   });
   res.status(201).json({ data: contact });
 });
+
+/**
+ * GET /api/v1/contacts/export
+ * Download all organization contacts as a CSV file.
+ */
+router.get('/export', requirePermission('contacts.read'), async (req: Request, res: Response): Promise<void> => {
+  const orgId = req.user!.organizationId;
+
+  const contacts = await prisma.contact.findMany({
+    where: { organizationId: orgId, deletedAt: null },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  const csvRows = contacts.map((c) => ({
+    email: c.email,
+    firstName: c.firstName || '',
+    lastName: c.lastName || '',
+    company: c.company || '',
+    tags: (c.tags || []).join('; '),
+    createdAt: c.createdAt.toISOString(),
+  }));
+
+  const csv = Papa.unparse(csvRows);
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="contacts.csv"');
+  res.status(200).send(csv);
+});
+
+/**
+ * POST /api/v1/contacts/import
+ * Bulk import contacts from CSV or text.
+ */
+router.post(
+  '/import',
+  requirePermission('contacts.manage'),
+  upload.single('file') as any,
+  async (req: Request, res: Response): Promise<void> => {
+    const orgId = req.user!.organizationId;
+
+    let rawRows: Record<string, string>[] = [];
+
+    if (req.file) {
+      const content = req.file.buffer.toString('utf-8');
+      const parsed = Papa.parse<Record<string, string>>(content, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: (h) => h.trim().toLowerCase(),
+      });
+      rawRows = parsed.data;
+    } else if (req.body['emails']) {
+      const lines = (req.body['emails'] as string).split('\n').map((l) => l.trim()).filter(Boolean);
+      rawRows = lines.map((email) => ({ email }));
+    } else {
+      res.status(400).json({ error: { code: 'NO_INPUT', message: 'No file or emails provided' } });
+      return;
+    }
+
+    let mapping: Record<string, string> = {};
+    if (req.body['mapping']) {
+      try {
+        mapping = typeof req.body['mapping'] === 'string' ? JSON.parse(req.body['mapping']) : req.body['mapping'];
+      } catch {}
+    }
+
+    const emailCol = (mapping['email'] || 'email').toLowerCase();
+    const firstNameCol = mapping['firstName'] ? mapping['firstName'].toLowerCase() : null;
+    const lastNameCol = mapping['lastName'] ? mapping['lastName'].toLowerCase() : null;
+    const companyCol = mapping['company'] ? mapping['company'].toLowerCase() : null;
+
+    let inserted = 0;
+    let invalid = 0;
+    const seen = new Set<string>();
+
+    for (const row of rawRows) {
+      const raw = (row[emailCol] ?? row['email'] ?? row['e-mail'] ?? row['mail'] ?? '').trim();
+      if (!raw || !isValidEmail(raw)) {
+        invalid++;
+        continue;
+      }
+      const normalized = normalizeEmail(raw);
+      if (seen.has(normalized)) continue;
+      seen.add(normalized);
+
+      await prisma.contact.upsert({
+        where: { organizationId_email: { organizationId: orgId, email: normalized } },
+        create: {
+          organizationId: orgId,
+          email: normalized,
+          firstName: firstNameCol ? row[firstNameCol] : (row['firstname'] ?? row['first_name']),
+          lastName: lastNameCol ? row[lastNameCol] : (row['lastname'] ?? row['last_name']),
+          company: companyCol ? row[companyCol] : row['company'],
+        },
+        update: {
+          firstName: firstNameCol ? row[firstNameCol] : (row['firstname'] ?? row['first_name']),
+          lastName: lastNameCol ? row[lastNameCol] : (row['lastname'] ?? row['last_name']),
+          company: companyCol ? row[companyCol] : row['company'],
+        },
+      });
+      inserted++;
+    }
+
+    res.json({
+      data: {
+        inserted,
+        invalid,
+        total: rawRows.length,
+      },
+    });
+  }
+);
 
 router.delete('/:id', requirePermission('contacts.manage'), async (req: Request, res: Response): Promise<void> => {
   const orgId = req.user!.organizationId;

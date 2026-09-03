@@ -16,9 +16,10 @@
 7. [Email Delivery Pipeline Sequence Diagram](#email-delivery-pipeline-sequence-diagram)
 8. [Google OIDC Authentication Sequence Diagram](#google-oidc-authentication-sequence-diagram)
 9. [Multi-Tenant RBAC Hierarchy & Permissions](#multi-tenant-rbac-hierarchy--permissions)
-10. [Quickstart & Development Commands](#quickstart--development-commands)
-11. [API Endpoint Reference](#api-endpoint-reference)
-12. [Operational Health, Observability & Recovery](#operational-health-observability--recovery)
+10. [CSV Power Suite & Contact Management](#csv-power-suite--contact-management)
+11. [Quickstart & Development Commands](#quickstart--development-commands)
+12. [API Endpoint Reference](#api-endpoint-reference)
+13. [Operational Health, Observability & Recovery](#operational-health-observability--recovery)
 
 ---
 
@@ -42,8 +43,8 @@ The repository is organized strictly into **`backend`** and **`frontend`** modul
 GoMAil/
 ├── .env.example          # Environment template and reference
 ├── .gitignore            # Airtight leak protection for all .env files
-├── package.json          # Root orchestration scripts (dev, build, test)
-├── pnpm-workspace.yaml   # Workspace manifest (includes backend & frontend)
+├── package.json          # Root orchestration & npm workspaces manifest
+├── package-lock.json     # Deterministic dependency tree lockfile
 ├── tsconfig.base.json    # Shared TypeScript compiler options
 ├── README.md             # Consolidated system documentation & UML specifications
 │
@@ -468,6 +469,43 @@ classDiagram
 
 ---
 
+## CSV Power Suite & Contact Management
+
+GoMAil includes a full-featured, enterprise-grade CSV ingestion and extraction engine designed for high-scale cold outreach and audience segmentation:
+
+### 1. Interactive Drag-and-Drop Ingestion Dropzone
+- Accessible directly inside both **Campaign Details (`/app/campaigns/:id`)** and **Organization Contacts (`/app/contacts`)**.
+- Visual drag-and-drop state transitions with dashed active boundaries.
+- Instant file metadata inspection displaying detected file size, total raw lines, and detected header attributes prior to transmission.
+
+### 2. Intelligent Column Mapping Engine
+- Automatically parses CSV headers on the client side and matches column aliases:
+  - **Email (Required):** Matches `email`, `mail`, `e-mail`, `recipient_email`.
+  - **First Name:** Matches `first_name`, `firstname`, `first`, `fname`.
+  - **Last Name:** Matches `last_name`, `lastname`, `last`, `lname`, `surname`.
+  - **Company:** Matches `company`, `org`, `organization`, `business`, `firm`.
+- Full user override via dynamic dropdown selectors allowing any custom column name to be mapped directly to recipient attributes.
+
+### 3. Pre-Upload RFC Validation Preview Table
+- Validates the first rows of any uploaded CSV immediately inside the browser before hitting the server.
+- Live validation pills flag syntactically valid RFC 5322 addresses (`Valid`) versus malformed or missing emails (`Invalid`).
+- Provides pre-flight confidence, eliminating failed campaign launches due to malformed input files.
+
+### 4. One-Click Sample CSV Templates
+- Instant downloadable CSV templates with pre-configured headers:
+  - `sample_recipients_template.csv`
+  - `contacts_sample_template.csv`
+- Eliminates formatting guesswork for operators and campaign managers.
+
+### 5. High-Performance CSV Streaming Export
+- **Campaign Recipients Export (`GET /api/v1/campaigns/:id/recipients/export`):** Streams all campaign recipients with live delivery statuses (`PENDING`, `SCHEDULED`, `SENT`, `FAILED`, `SUPPRESSED`), failure error messages, and execution timestamps.
+- **Organization Contacts Export (`GET /api/v1/contacts/export`):** Exports the entire organizational address book as a consolidated CSV file with associated tags.
+
+### 6. Clean Viewport & Distraction-Free UI
+- Streamlined interface with the removal of background developer widgets (TanStack Query floating buttons and Next.js dev activity indicators) to provide a 100% polished, production-ready workspace.
+
+---
+
 ## Quickstart & Development Commands
 
 ### 1. Prerequisites
@@ -525,7 +563,17 @@ npm run dev:frontend  # Next.js 16 Web Dashboard (http://localhost:3000)
 
 ### Recipients & Imports (`/api/v1/campaigns/:id/recipients`)
 - `GET /api/v1/campaigns/:id/recipients` — Paginated list of campaign recipients.
-- `POST /api/v1/campaigns/:id/recipients/import` — Bulk import via CSV upload or line-delimited email paste with deduplication and suppression checks.
+- `POST /api/v1/campaigns/:id/recipients/import` — Bulk import via CSV upload with column mapping or line-delimited email paste.
+- `GET /api/v1/campaigns/:id/recipients/export` — Stream and download all campaign recipients as a CSV file with live delivery statuses.
+
+### Contacts Directory (`/api/v1/contacts`)
+- `GET /api/v1/contacts` — Paginated list of organization contacts with search and tag filters.
+- `POST /api/v1/contacts` — Create or update individual contact.
+- `GET /api/v1/contacts/export` — Stream and download entire organization contacts directory as CSV.
+- `POST /api/v1/contacts/import` — Bulk import contacts from CSV with column mapping.
+- `DELETE /api/v1/contacts/:id` — Soft-delete contact.
+- `GET /api/v1/contacts/suppressions` — List organization-wide suppressed emails.
+- `POST /api/v1/contacts/suppressions` — Add address to suppression list.
 
 ### Senders & Deliverability (`/api/v1/senders`)
 - `GET /api/v1/senders` — List verified sender profiles with hourly limiters.

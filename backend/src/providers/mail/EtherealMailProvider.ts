@@ -93,8 +93,9 @@ export class EtherealMailProvider implements MailProvider {
         html: message.html,
         text: message.text,
         headers: {
-          'X-GoMAil-Job-Id': message.jobId,
-          'X-GoMAil-Campaign-Id': message.campaignId,
+          ...message.headers,
+          ...((message as any).jobId ? { 'X-GoMAil-Job-Id': (message as any).jobId } : {}),
+          ...((message as any).campaignId ? { 'X-GoMAil-Campaign-Id': (message as any).campaignId } : {}),
         },
       });
     } catch (err: any) {
@@ -116,8 +117,9 @@ export class EtherealMailProvider implements MailProvider {
           html: message.html,
           text: message.text,
           headers: {
-            'X-GoMAil-Job-Id': message.jobId,
-            'X-GoMAil-Campaign-Id': message.campaignId,
+            ...message.headers,
+            ...((message as any).jobId ? { 'X-GoMAil-Job-Id': (message as any).jobId } : {}),
+            ...((message as any).campaignId ? { 'X-GoMAil-Campaign-Id': (message as any).campaignId } : {}),
           },
         });
       } else {

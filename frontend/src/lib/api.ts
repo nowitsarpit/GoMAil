@@ -125,10 +125,16 @@ export async function deleteCampaign(id: string) {
   return apiFetch<{ success: boolean }>(`/api/v1/campaigns/${id}`, { method: 'DELETE' });
 }
 
-export async function importRecipients(campaignId: string, file: File | null, emails?: string) {
+export async function importRecipients(
+  campaignId: string,
+  file: File | null,
+  emails?: string,
+  mapping?: Record<string, string>
+) {
   const form = new FormData();
   if (file) form.append('file', file);
   if (emails) form.append('emails', emails);
+  if (mapping) form.append('mapping', JSON.stringify(mapping));
 
   const res = await fetch(
     `${API_URL}/api/v1/campaigns/${campaignId}/recipients/import`,
@@ -139,6 +145,14 @@ export async function importRecipients(campaignId: string, file: File | null, em
     throw new ApiError(res.status, body?.error?.code ?? 'UNKNOWN', body?.error?.message ?? `HTTP ${res.status}`);
   }
   return res.json();
+}
+
+export async function exportRecipientsCsv(campaignId: string): Promise<Blob> {
+  const res = await fetch(`${API_URL}/api/v1/campaigns/${campaignId}/recipients/export`, {
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to export recipients CSV');
+  return res.blob();
 }
 
 export async function getCampaignRecipients(campaignId: string, params?: Record<string, string>) {
@@ -184,6 +198,32 @@ export async function createTemplate(data: unknown) {
 export async function getContacts(params?: Record<string, string>) {
   const qs = params ? '?' + new URLSearchParams(params).toString() : '';
   return apiFetch<{ data: unknown[]; pagination: Pagination }>(`/api/v1/contacts${qs}`);
+}
+
+export async function exportContactsCsv(): Promise<Blob> {
+  const res = await fetch(`${API_URL}/api/v1/contacts/export`, {
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('Failed to export contacts CSV');
+  return res.blob();
+}
+
+export async function importContacts(file: File | null, emails?: string, mapping?: Record<string, string>) {
+  const form = new FormData();
+  if (file) form.append('file', file);
+  if (emails) form.append('emails', emails);
+  if (mapping) form.append('mapping', JSON.stringify(mapping));
+
+  const res = await fetch(`${API_URL}/api/v1/contacts/import`, {
+    method: 'POST',
+    body: form,
+    credentials: 'include',
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, body?.error?.code ?? 'UNKNOWN', body?.error?.message ?? `HTTP ${res.status}`);
+  }
+  return res.json();
 }
 
 // ─── Analytics ───────────────────────────────────────────────────────────────
