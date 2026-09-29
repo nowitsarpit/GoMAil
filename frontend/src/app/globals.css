@@ -164,3 +164,36 @@ body {
 .animate-pulse-glow {
   animation: pulseGlow 2s infinite ease-in-out;
 }
+
+/* ─── Keyframe: pulse (used for live status dots) ────────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* ─── Mobile Responsive Layout ───────────────────────────────────────────── */
+
+/* On mobile: hide the desktop sidebar, show the mobile header */
+@media (max-width: 768px) {
+  .desktop-sidebar {
+    display: none !important;
+  }
+
+  .mobile-header {
+    display: flex !important;
+  }
+}
+
+/* On desktop: hide the mobile header bar */
+@media (min-width: 769px) {
+  .mobile-header {
+    display: none !important;
+  }
+}
+
+/* Tablet: allow sidebar to be narrower */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .desktop-sidebar {
+    width: 200px;
+  }
+}

@@ -52,7 +52,7 @@ const envSchema = z.object({
   GOOGLE_CALLBACK_URL: z.string().default('http://localhost:5000/api/auth/google/callback'),
 
   // Session
-  SESSION_SECRET: z.string().min(32).optional(),
+  SESSION_SECRET: z.string().optional(),
   SESSION_DURATION_DAYS: z.coerce.number().default(30),
 
   // URLs
@@ -75,7 +75,19 @@ function parseEnv() {
     console.error(result.error.flatten().fieldErrors);
     process.exit(1);
   }
-  return result.data;
+
+  const data = result.data;
+
+  // In production, SESSION_SECRET must be set and at least 32 chars
+  if (data.NODE_ENV === 'production') {
+    if (!data.SESSION_SECRET || data.SESSION_SECRET.length < 32) {
+      console.error('❌ SESSION_SECRET must be set to a string of at least 32 characters in production.');
+      console.error('   Generate one with: node -e "console.log(require(\'crypto\').randomBytes(64).toString(\'hex\'))"');
+      process.exit(1);
+    }
+  }
+
+  return data;
 }
 
 export const env = parseEnv();

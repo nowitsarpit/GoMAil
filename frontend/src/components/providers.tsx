@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Toaster } from 'react-hot-toast';
+import { ApiError } from '@/lib/api';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -12,9 +13,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
           queries: {
             staleTime: 30 * 1000, // 30s
             retry: (failureCount, error: unknown) => {
-              // Don't retry 401/403 errors
-              if (error instanceof Error && error.message.includes('401')) return false;
-              if (error instanceof Error && error.message.includes('403')) return false;
+              // Don't retry auth/permission errors
+              if (error instanceof ApiError && (error.status === 401 || error.status === 403)) return false;
               return failureCount < 2;
             },
             refetchOnWindowFocus: false,

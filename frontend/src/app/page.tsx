@@ -97,24 +97,6 @@ export default function LandingPage() {
         position: 'relative',
         zIndex: 1,
       }}>
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '6px 14px',
-          background: 'rgba(99, 102, 241, 0.1)',
-          border: '1px solid rgba(99, 102, 241, 0.25)',
-          borderRadius: '100px',
-          fontSize: '12px',
-          color: '#a5b4fc',
-          fontWeight: 600,
-          letterSpacing: '0.04em',
-          textTransform: 'uppercase',
-          marginBottom: '28px',
-        }}>
-          <Sparkles size={14} color="#a5b4fc" />
-          Enterprise Cold Email Orchestration
-        </div>
 
         <h1 style={{
           fontSize: 'clamp(40px, 6.5vw, 68px)',
@@ -162,7 +144,7 @@ export default function LandingPage() {
               boxShadow: '0 6px 20px -2px rgba(99, 102, 241, 0.5)',
             }}
           >
-            Launch Free Console <ArrowRight size={16} />
+            Sign in with Google <ArrowRight size={16} />
           </Link>
 
           <a
@@ -209,9 +191,9 @@ export default function LandingPage() {
             </div>
             <span style={{
               fontSize: '11px', fontWeight: 600, padding: '3px 8px', borderRadius: '100px',
-              background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)',
+              background: 'rgba(255,255,255,0.05)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)',
             }}>
-              ● Live 1,200/min Throughput
+              Architecture Overview
             </span>
           </div>
 
@@ -340,12 +322,18 @@ export default function LandingPage() {
           </div>
           <span>© 2026 GoMAil. Plan. Deliver. Observe.</span>
         </div>
-        <div style={{ display: 'flex', gap: '20px' }}>
+        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
           <Link href="/login" style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
             Console Sign In
           </Link>
+          <Link href="/privacy-policy" style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
+            Privacy Policy
+          </Link>
+          <Link href="/terms-and-conditions" style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
+            Terms
+          </Link>
           <a href="https://github.com/nowitsarpit/GoMAil" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
-            GitHub Repository
+            GitHub
           </a>
         </div>
       </footer>

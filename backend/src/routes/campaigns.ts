@@ -13,30 +13,8 @@ const router = Router();
 // All campaign routes require authentication
 router.use(requireAuth);
 
-// ─── Campaign State Machine ────────────────────────────────────────────────
-
+// Local type for status filter casting (state machine lives in campaign.service.ts)
 type CampaignStatus = 'DRAFT' | 'READY' | 'SCHEDULED' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'CANCELLED' | 'FAILED';
-
-const VALID_TRANSITIONS: Record<CampaignStatus, CampaignStatus[]> = {
-  DRAFT: ['READY', 'CANCELLED'],
-  READY: ['DRAFT', 'SCHEDULED', 'RUNNING', 'CANCELLED'],
-  SCHEDULED: ['RUNNING', 'PAUSED', 'CANCELLED'],
-  RUNNING: ['PAUSED', 'COMPLETED', 'FAILED', 'CANCELLED'],
-  PAUSED: ['RUNNING', 'CANCELLED'],
-  COMPLETED: [],
-  CANCELLED: [],
-  FAILED: [],
-};
-
-function assertValidTransition(from: CampaignStatus, to: CampaignStatus): void {
-  const valid = VALID_TRANSITIONS[from] ?? [];
-  if (!valid.includes(to)) {
-    throw new AppError(409, 'INVALID_STATE_TRANSITION',
-      `Cannot transition campaign from ${from} to ${to}`);
-  }
-}
-
-// ─── List Campaigns ─────────────────────────────────────────────────────────
 
 router.get('/', requirePermission('campaign.read'), async (req: Request, res: Response): Promise<void> => {
   const querySchema = z.object({

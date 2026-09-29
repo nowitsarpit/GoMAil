@@ -598,3 +598,30 @@ If a worker instance terminates unexpectedly mid-delivery, its heartbeat lock ex
 Double-sends are impossible:
 $$\text{idempotencyKey} = \text{SHA-256}(\text{campaignId} + \text{":"} + \text{normalizedEmail})$$
 Even if BullMQ delivers a job more than once across network retries, the atomic database lease ensures only one email is transmitted across SMTP.
+
+---
+
+## Continuous Integration
+
+GoMAil uses **GitHub Actions** for CI. The pipeline runs on every push to `main`/`master` and every pull request. There is no Docker dependency — CI runs directly on GitHub-hosted Ubuntu runners with Node.js 22.
+
+### CI Jobs
+
+| Job | What it does |
+|---|---|
+| `backend` | TypeScript typecheck (`tsc --noEmit`) + `prisma validate` |
+| `backend-tests` | Unit test suite via `vitest run` |
+| `frontend` | TypeScript typecheck + Next.js production build |
+| `frontend-tests` | Frontend unit tests via `vitest` |
+
+### Deployment Targets
+
+| Service | Platform | Notes |
+|---|---|---|
+| Backend API | **Render** | `npm run build -w backend && npm run start -w backend` |
+| Background Worker | **Render** | `npm run start:worker -w backend` (separate process) |
+| Frontend | **Vercel** | Next.js auto-detected, root dir: `frontend/` |
+| Database | PostgreSQL | Managed provider of choice |
+| Queue / Cache | Redis | Managed provider of choice (e.g., Upstash) |
+
+> **Note:** Worker and API are separate processes sharing the same database and Redis instance. Run both on Render as separate services from the same repository.

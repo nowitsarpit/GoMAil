@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getAuthStatus } from '@/lib/api';
-import { Mail, AlertCircle, ShieldCheck, Lock, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Mail, AlertCircle, Lock } from 'lucide-react';
 import Link from 'next/link';
 
 function LoginContent() {
@@ -62,15 +62,7 @@ function LoginContent() {
           <span style={{ fontWeight: 800, fontSize: '16px', letterSpacing: '-0.02em', color: '#ffffff' }}>GoMAil</span>
         </Link>
 
-        <span style={{
-          display: 'inline-flex', alignItems: 'center', gap: '6px',
-          padding: '4px 12px', borderRadius: '100px', fontSize: '11px', fontWeight: 600,
-          background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)',
-          color: 'var(--color-text-secondary)',
-        }}>
-          <ShieldCheck size={13} color="#34d399" />
-          Zero Mock Data Guarantee
-        </span>
+
       </header>
 
       {/* Center Auth Card */}
@@ -152,7 +144,10 @@ function LoginContent() {
 
           {/* Google Sign In Button */}
           <a
-            href={`${API_URL}/api/v1/auth/google`}
+            href={status?.oauthConfigured ? `${API_URL}/api/v1/auth/google` : undefined}
+            role={status?.oauthConfigured ? undefined : 'button'}
+            aria-disabled={!status?.oauthConfigured}
+            tabIndex={status?.oauthConfigured ? 0 : -1}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -172,6 +167,7 @@ function LoginContent() {
               transition: 'transform 0.15s, box-shadow 0.15s',
             }}
             id="google-signin-btn"
+            aria-label={status?.oauthConfigured ? 'Sign in with Google' : 'Sign in with Google (not configured)'}
           >
             {/* Google G logo */}
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -180,21 +176,21 @@ function LoginContent() {
               <path d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
               <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
             </svg>
-            Continue with Google
+            Sign in with Google
           </a>
 
           <div style={{ marginTop: '28px', borderTop: '1px solid var(--color-border)', paddingTop: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', fontSize: '11px', color: 'var(--color-text-muted)' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <CheckCircle2 size={12} color="#34d399" /> Enterprise OIDC
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <CheckCircle2 size={12} color="#34d399" /> 256-bit PKCE
-              </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <CheckCircle2 size={12} color="#34d399" /> Multi-Tenant
-              </span>
-            </div>
+            <p style={{ fontSize: '11px', color: 'var(--color-text-muted)', textAlign: 'center', lineHeight: 1.5 }}>
+              By signing in you agree to our{' '}
+              <Link
+                href="/terms-and-conditions"
+                style={{ color: 'var(--color-accent-text)', textDecoration: 'none' }}
+              >
+                Terms of Service
+              </Link>
+              . Your session is stored
+              server-side with an HttpOnly cookie — never in localStorage.
+            </p>
           </div>
         </div>
       </div>

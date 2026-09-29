@@ -1,12 +1,12 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { getCampaigns, getAnalytics } from '@/lib/api';
+import { getCampaigns, getAnalytics, getOperationsStatus } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
 import {
   Send, CheckCircle2, AlertCircle, Clock, Plus, ArrowRight,
-  Sparkles, TrendingUp, ShieldCheck, Mail, Users
+  Sparkles, TrendingUp, AlertTriangle, Mail, Users
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -22,8 +22,22 @@ export default function DashboardPage() {
     queryFn: getAnalytics,
   });
 
+  const { data: opsData } = useQuery({
+    queryKey: ['operations'],
+    queryFn: getOperationsStatus,
+    staleTime: 60 * 1000,     // refresh ops status every 60s
+    refetchInterval: 60 * 1000,
+  });
+
   const analytics = (analyticsData?.data as any) ?? {};
   const recentCampaigns = campaignsData?.data ?? [];
+  const opsStatus = (opsData?.data as any)?.status as string | undefined;
+
+  const pipelineBadge = opsStatus === 'operational'
+    ? { color: '#34d399', bg: 'rgba(16, 185, 129, 0.1)', border: 'rgba(16, 185, 129, 0.25)', dot: '#10b981', label: 'All Systems Operational' }
+    : opsStatus === 'degraded'
+      ? { color: '#fbbf24', bg: 'rgba(245, 158, 11, 0.1)', border: 'rgba(245, 158, 11, 0.25)', dot: '#f59e0b', label: 'System Degraded' }
+      : { color: 'var(--color-text-muted)', bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.08)', dot: 'var(--color-text-muted)', label: 'Checking status...' };
 
   const statusColor: Record<string, { bg: string; text: string; border: string }> = {
     RUNNING: { bg: 'rgba(99, 102, 241, 0.15)', text: '#a5b4fc', border: 'rgba(99, 102, 241, 0.3)' },
@@ -78,14 +92,11 @@ export default function DashboardPage() {
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: '6px',
               padding: '3px 10px', borderRadius: '100px', fontSize: '11px', fontWeight: 600,
-              background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.25)',
-              color: '#34d399',
+              background: pipelineBadge.bg, border: `1px solid ${pipelineBadge.border}`,
+              color: pipelineBadge.color,
             }}>
-              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
-              Pipeline Operational
-            </span>
-            <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-              Supabase PostgreSQL · BullMQ Redis · SMTP
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: pipelineBadge.dot, display: 'inline-block' }} />
+              {pipelineBadge.label}
             </span>
           </div>
           <h1 style={{ fontSize: '26px', fontWeight: 800, letterSpacing: '-0.03em', color: '#ffffff', marginBottom: '4px' }}>

@@ -11,7 +11,10 @@ if (fs.existsSync(backendEnvPath)) {
 
 const nextConfig: NextConfig = {
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000",
+    // Public API URL — exposed to browser. Never put secrets here.
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000",
+    // Public site URL — used for canonical URLs, sitemap, OG images.
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
   },
   devIndicators: false,
   turbopack: {

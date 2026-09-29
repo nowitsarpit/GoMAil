@@ -7,9 +7,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { logout } from '@/lib/api';
 import toast from 'react-hot-toast';
 import {
-  Mail, LayoutDashboard, Send, Users, Settings,
+  Mail, LayoutDashboard, Send, Users, Users2, Settings, FileText, AtSign,
   Activity, BarChart3, Server, ChevronDown, LogOut,
-  UserCircle, Menu, X, Sparkles, Shield
+  UserCircle, Menu, X
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -17,12 +17,12 @@ const NAV_ITEMS = [
   { href: '/app', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/app/campaigns', label: 'Campaigns', icon: Send },
   { href: '/app/contacts', label: 'Contacts', icon: Users },
-  { href: '/app/senders', label: 'Senders', icon: Mail },
-  { href: '/app/templates', label: 'Templates', icon: Mail },
+  { href: '/app/senders', label: 'Senders', icon: AtSign },
+  { href: '/app/templates', label: 'Templates', icon: FileText },
   { href: '/app/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/app/activity', label: 'Activity', icon: Activity },
   { href: '/app/operations', label: 'Operations', icon: Server },
-  { href: '/app/team', label: 'Team', icon: Users },
+  { href: '/app/team', label: 'Team', icon: Users2 },
   { href: '/app/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -240,14 +240,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'var(--color-surface-0)' }}>
       {/* Desktop sidebar */}
-      <aside style={{
-        width: '240px',
-        flexShrink: 0,
-        borderRight: '1px solid var(--color-border)',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}>
+      <aside
+        className="desktop-sidebar"
+        style={{
+          width: '240px',
+          flexShrink: 0,
+          borderRight: '1px solid var(--color-border)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        }}
+      >
         <SidebarContent />
       </aside>
 

@@ -46,14 +46,19 @@ export async function createOutboxEvent(
  * Called by the outbox processor on a polling interval.
  */
 export async function processOutboxEvents(batchSize = 100): Promise<number> {
-  // Fetch unprocessed events (no processedAt, not failed after 3 attempts)
+  // Fetch unprocessed events that have not permanently failed.
+  // Permanently failed = failedAt is set AND attempts have been exhausted (>= 3).
+  // Events with no failedAt, or with failedAt but still under the retry limit, are eligible.
   const events = await prisma.outboxEvent.findMany({
     where: {
       processedAt: null,
-      OR: [
-        { failedAt: null },
-        { attempts: { lt: 3 } },
-      ],
+      NOT: {
+        // Exclude permanently-failed events: has a failure timestamp AND exhausted retries
+        AND: [
+          { failedAt: { not: null } },
+          { attempts: { gte: 3 } },
+        ],
+      },
     },
     orderBy: { createdAt: 'asc' },
     take: batchSize,
