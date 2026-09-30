@@ -112,10 +112,15 @@ export async function revokeAllUserSessions(userId: string): Promise<void> {
 
 // Cookie configuration
 export const SESSION_COOKIE_NAME = 'gomail_session';
+
+// In production the frontend (Vercel) and backend (Render) are on different domains,
+// so we need SameSite=None + Secure to allow the browser to send the cookie
+// cross-site. SameSite=Lax silently blocks cookies in cross-origin requests.
+const isProduction = env.NODE_ENV === 'production';
 export const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  secure: isProduction,
+  sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax',
   path: '/',
   maxAge: SESSION_DURATION_MS / 1000, // seconds
 };
