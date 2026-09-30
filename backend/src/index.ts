@@ -35,10 +35,25 @@ app.use(helmet({
 }));
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
-const allowedOrigins = env.CORS_ORIGINS.split(',').map((o) => o.trim());
+const allowedOrigins = env.CORS_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean);
+
+function isOriginAllowed(origin: string): boolean {
+  for (const allowed of allowedOrigins) {
+    // Exact match
+    if (allowed === origin) return true;
+    // Wildcard pattern: e.g. https://*.vercel.app
+    if (allowed.includes('*')) {
+      const escaped = allowed.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace('\\*', '.*');
+      if (new RegExp(`^${escaped}$`).test(origin)) return true;
+    }
+  }
+  return false;
+}
+
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    // Allow server-to-server (no Origin header) or matched origins
+    if (!origin || isOriginAllowed(origin)) {
       callback(null, true);
     } else {
       callback(new Error(`CORS: origin ${origin} not allowed`));
@@ -47,6 +62,23 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+}));
+
+// Respond to all OPTIONS pre-flight requests immediately
+app.options('*', cors({
+  origin: (origin, callback) => {
+    if (!origin || isOriginAllowed(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS: origin ${origin} not allowed`));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
+  optionsSuccessStatus: 204,
 }));
 
 // ─── Body Parsing ────────────────────────────────────────────────────────────
